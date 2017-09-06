@@ -1,0 +1,13 @@
+#!/bin/sh
+DOMAIN="MY_DOMAIN"
+FULL_PEM="/etc/haproxy/cert-haproxy.pem"
+echo "Certbot renewal hook running as user: '$USER'..." >&2
+echo "RENEWED_DOMAINS=$RENEWED_DOMAINS" >&2
+echo "RENEWED_LINEAGE=$RENEWED_LINEAGE" >&2
+
+if grep --quiet "$DOMAIN" <<< "$RENEWED_DOMAINS"; then
+		cat $RENEWED_LINEAGE/fullchain.pem $RENEWED_LINEAGE/privkey.pem > $FULL_PEM
+		echo "PEM updated $FULL_PEM" >&2
+		systemctl restart haproxy
+		echo "Haproxy restarted" >&2
+fi
