@@ -1,0 +1,29 @@
+sudo apt-get update
+sudo apt-get install nano curl apt-transport-https runit -y
+sudo nano /etc/apt/sources.list 
+     add the line:  deb https://apache.bintray.com/couchdb-deb xenial main
+     
+curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
+sudo apt-get update 
+sudo apt-get install couchdb -y
+
+sudo mkdir /etc/sv/couchdb && sudo mkdir /etc/sv/couchdb/log
+sudo nano /etc/sv/couchdb/log/run2
+
+add the following lines:
+#!/bin/sh
+exec svlogd -tt /var/log/couchdb
+
+sudo nano /etc/sv/couchdb/run
+add the lines:
+#!/bin/sh
+export HOME=/home/couchdb
+exec 2>&1
+exec chpst -u couchdb /opt/couchdb/bin/couchdb
+sudo chmod u+x /etc/sv/couchdb/log/run && sudo chmod u+x /etc/sv/couchdb/run
+sudo ln -s /etc/sv/couchdb/ /etc/service/couchdb
+
+controls:
+sudo sv status couchdb
+sudo sv stop couchdb
+sudo sv start couchdb
