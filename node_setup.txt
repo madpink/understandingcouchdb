@@ -1,0 +1,27 @@
+################# INSTALL AND SETUP COUCHDB ON ALL NODES #################
+sudo apt-get update -y
+sudo apt-get install nano curl apt-transport-https runit -y
+sudo nano /etc/apt/sources.list 
+#####  add the line below to sources  (replace xenial with your distribution)
+deb https://apache.bintray.com/couchdb-deb xenial main
+
+curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
+sudo apt-get update && sudo apt-get install couchdb -y
+#####  
+
+sudo mkdir /etc/sv/couchdb && sudo mkdir /etc/sv/couchdb/log
+sudo nano /etc/sv/couchdb/log/run2
+#####   add the following 2 lines to run2:
+#!/bin/sh
+exec svlogd -tt /var/log/couchdb
+
+sudo nano /etc/sv/couchdb/run
+##### add the following 4 lines to run:
+#!/bin/sh
+export HOME=/home/couchdb
+exec 2>&1
+exec chpst -u couchdb /opt/couchdb/bin/couchdb
+
+sudo chmod u+x /etc/sv/couchdb/log/run && sudo chmod u+x /etc/sv/couchdb/run
+sudo ln -s /etc/sv/couchdb/ /etc/service/couchdb
+
