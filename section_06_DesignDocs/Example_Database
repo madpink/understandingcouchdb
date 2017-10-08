@@ -1,3 +1,5 @@
+{ 
+	"docs":
 [
   {
     "_id": "_design/datafunc",
@@ -375,3 +377,4 @@
     "year_birth": 1958
   }
 ]
+}
