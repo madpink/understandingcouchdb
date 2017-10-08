@@ -1,0 +1,377 @@
+[
+  {
+    "_id": "_design/datafunc",
+    "shows": {
+      "htmldisp": "function (doc,req) {return '<h1>' + doc.stagename + '</h1>';}"
+    }
+  },
+  {
+    "_id": "_design/datascan",
+    "language": "javascript",
+    "views": {
+      "age of death": {
+        "map": "function (doc) {\n  var age_at_death = doc.year_death - doc.year_birth;\n  var name_to_use;\n  if (doc.stagename != null)\n  name_to_use = doc.stagename\n  else\n  name_to_use = doc.name;\n  if (age_at_death > 0)\n  emit(name_to_use, age_at_death);\n}"
+      },
+      "ageofdeath": {
+        "map": "function (doc) {\n  var age_at_death = doc.year_death - doc.year_birth;\n  var name_to_use;\n  if (doc.stagename != null)\n  name_to_use = doc.stagename\n  else\n  name_to_use = doc.name;\n  if (age_at_death > 0)\n  emit(name_to_use, age_at_death);\n}"
+      },
+      "approxage": {
+        "map": "function(doc) {\n    if (!doc.year_death) \n    var age = 2017 - doc.year_birth;\n    if (age) \n    emit(age, [doc.stagename,doc.name]);\n}"
+      },
+      "averageage": {
+        "map": "function(doc) {\n    if (!doc.year_death) \n    var age = 2017 - doc.year_birth;\n    if (age) \n    emit(null, age);\n}",
+        "reduce": "function (keys, values, rereduce) {\n    var allages = sum(values);\n    var pplcount = values.length;\n    var average = allages/pplcount;\n    average = Math.round(average);\n    return average;\n}"
+      },
+      "born60s": {
+        "map": "function (doc) {\n  if (doc.year_birth >= 1960 && doc.year_birth < 1970)\n  emit([doc.stagename,doc.name], doc.year_birth);\n}"
+      },
+      "brits": {
+        "map": "function (doc) {\n if (doc.nationality == \"British\")\n emit(doc._id, {StageName: doc.stagename, Name: doc.name});\n}"
+      },
+      "complex": {
+        "map": "function (doc) {emit([doc.nationality, doc.name], doc.bands);}"
+      },
+      "dead": {
+        "map": "function (doc) {\n  if (doc.year_death != null)\n  {emit(doc.year_death, doc.stagename);}\n}"
+      },
+      "deadoralive": {
+        "map": "function(doc) {\n    if (doc.year_death) emit(\"Dead\", 1);\n    else emit(\"Alive\", 1);\n}",
+        "reduce": "_count"
+      },
+      "instruments": {
+        "map": "function(doc) {\n  if(doc.instruments) {\n    doc.instruments.forEach(function(inst) {\n      emit(inst, 1);\n    });\n  }\n}",
+        "reduce": "_count"
+      },
+      "instrumentsplayed": {
+        "map": "function (doc) { if(doc.stagename) emit(doc.stagename, doc.instruments); else emit(doc.name, doc.instruments);}"
+      },
+      "nationality": {
+        "map": "function (doc) {\n  emit(doc.nationality, 1);\n}",
+        "reduce": "_count"
+      },
+      "northamerican": {
+        "map": "function (doc) {\n  if(doc.nationality == \"American\" || doc.nationality == \"Cuban\" || doc.nationality == \"Canadian\")\n  emit(doc.stagename, doc.name);\n}"
+      }
+    }
+  },
+  {
+    "_id": "artist10",
+    "bands": [
+      "Skinny Puppy",
+      "KMFDM",
+      "ohGr",
+      "Pigface"
+    ],
+    "instruments": [
+      "guitar",
+      "keyboards"
+    ],
+    "name": "Kevin Ogilve",
+    "nationality": "Canadian",
+    "notes": "Intentionally burned me with cigarette in 1999",
+    "stagename": "Nivek Ogre",
+    "year_birth": 1962
+  },
+  {
+    "_id": "artist11",
+    "bands": [
+      "Ministry",
+      "RevCo",
+      "Lard",
+      "1000 Homo DJs",
+      "Pailhead",
+      "Buck Satan and the 666 Shooters",
+      "Surgical Meth Machine"
+    ],
+    "instruments": [
+      "guitar",
+      "bass"
+    ],
+    "name": "Alejandro Ramirez Casas",
+    "nationality": "Cuban",
+    "stagename": "Al Jourgensen",
+    "year_birth": 1958
+  },
+  {
+    "_id": "artist12",
+    "bands": [
+      "Joy Division"
+    ],
+    "instruments": [
+      "guitar",
+      "synthesizer"
+    ],
+    "name": "Ian Curtis",
+    "nationality": "British",
+    "year_birth": 1956,
+    "year_death": 1980
+  },
+  {
+    "_id": "artist13",
+    "bands": [
+      "Dead Can Dance",
+      "The Scavengers",
+      "The Marching Girls"
+    ],
+    "instruments": [
+      "guitar",
+      "bass",
+      "keyboards",
+      "drums",
+      "mandolin"
+    ],
+    "name": "Brendan Perry",
+    "nationality": "British",
+    "year_birth": 1959
+  },
+  {
+    "_id": "artist14",
+    "bands": [
+      "The Cult",
+      "Holy Barbarians",
+      "The Doors"
+    ],
+    "name": "Ian Astbury",
+    "nationality": "British",
+    "year_birth": 1962
+  },
+  {
+    "_id": "artist15",
+    "bands": [
+      "Fields of the Nephilim",
+      "Nefilim"
+    ],
+    "name": "Carl McCoy",
+    "nationality": "British",
+    "year_birth": 1963
+  },
+  {
+    "_id": "artist16",
+    "bands": [
+      "Christian Death",
+      "Shadow Project"
+    ],
+    "instruments": [
+      "guitar",
+      "bass",
+      "keyboards"
+    ],
+    "name": "Roger Painter",
+    "nationality": "American",
+    "stagename": "Rozz Williams",
+    "year_birth": 1963,
+    "year_death": 1998
+  },
+  {
+    "_id": "artist17",
+    "bands": [
+      "Nick Cave and the Bad Seeds",
+      "Birthday Party"
+    ],
+    "instruments": [
+      "guitar",
+      "piano",
+      "organ",
+      "drums",
+      "saxophone"
+    ],
+    "misc_facts": {
+      "duets": [
+        {
+          "Shane MacGowan": "What a Wonderful World"
+        },
+        {
+          "Johnny Cash": "I'm So Lonesome I Could Cry"
+        },
+        {
+          "Kylie Minogue": "Where the Wild Roses Grow"
+        }
+      ],
+      "movie_appearances": [
+        "Wings of Desire",
+        "Ghosts... of the Civil Dead",
+        "Johnny Suede"
+      ]
+    },
+    "name": "Nick Cave",
+    "nationality": "Australian",
+    "year_birth": 1957
+  },
+  {
+    "_id": "artist18",
+    "bands": [
+      "Apocalyptica"
+    ],
+    "instruments": [
+      "cello"
+    ],
+    "name": "Eino Matti Toppinen",
+    "nationality": "Finnish",
+    "stagename": "Eicca Toppinen",
+    "year_birth": 1975
+  },
+  {
+    "_id": "artist19",
+    "bands": [
+      "Type O Negative",
+      "Carnivore",
+      "Fallout"
+    ],
+    "instruments": [
+      "guitar",
+      "bass",
+      "keyboards"
+    ],
+    "name": "Petrus Ratajczyk",
+    "nationality": "American",
+    "stagename": "Peter Steele",
+    "year_birth": 1962,
+    "year_death": 2010
+  },
+  {
+    "_id": "artist2",
+    "bands": [
+      "The Clash",
+      "The Pogues",
+      "101ers"
+    ],
+    "instruments": [
+      "guitar",
+      "piano"
+    ],
+    "name": "John Mellor",
+    "nationality": "British",
+    "stagename": "Joe Strummer",
+    "year_birth": 1952,
+    "year_death": 2002
+  },
+  {
+    "_id": "artist20",
+    "bands": [
+      "Buzzcocks",
+      "Magazine",
+      "Luxuria",
+      "ShelleyDevoto",
+      "Mansun"
+    ],
+    "instruments": [
+      "guitar",
+      "keyboards"
+    ],
+    "name": "Howard Andrew Trafford ",
+    "nationality": "British",
+    "stagename": "Howard Devoto",
+    "year_birth": 1952
+  },
+  {
+    "_id": "artist3",
+    "bands": [
+      "The Damned",
+      "David Vanian & the Phantom Chords"
+    ],
+    "instruments": [
+      "keyboards"
+    ],
+    "name": "David Lett",
+    "nationality": "British",
+    "stagename": "David Vanian",
+    "year_birth": 1956
+  },
+  {
+    "_id": "artist4",
+    "bands": [
+      "Sisters of Mercy"
+    ],
+    "instruments": [
+      "guitar",
+      "bass",
+      "keyboards",
+      "drums"
+    ],
+    "name": "Andrew Taylor",
+    "nationality": "British",
+    "notes": "Accidentally burned me with cigarette in 1996",
+    "stagename": "Andrew Eldritch",
+    "year_birth": 1959
+  },
+  {
+    "_id": "artist5",
+    "bands": [
+      "Siouxsie and the Banshees",
+      "The Creatures"
+    ],
+    "instruments": [
+      "guitar"
+    ],
+    "name": "Susan Ballion",
+    "nationality": "British",
+    "stagename": "Siouxsie Sioux",
+    "year_birth": 1957,
+    "year_death": null
+  },
+  {
+    "_id": "artist6",
+    "bands": [
+      "Sex Pistols",
+      "Public Image Limited"
+    ],
+    "instruments": [
+      "guitar",
+      "bass",
+      "keyboards",
+      "violin",
+      "saxophone"
+    ],
+    "name": "John Lydon",
+    "nationality": "British",
+    "stagename": "Johnny Rotten",
+    "year_birth": 1956
+  },
+  {
+    "_id": "artist7",
+    "bands": [
+      "New York Dolls",
+      "Heartbreakers"
+    ],
+    "instruments": [
+      "guitar",
+      "bass"
+    ],
+    "name": "John Genzale",
+    "nationality": "American",
+    "stagename": "Johnny Thunders",
+    "year_birth": 1952,
+    "year_death": 1991
+  },
+  {
+    "_id": "artist8",
+    "bands": [
+      "The Ramones"
+    ],
+    "instruments": [
+      "guitar",
+      "drums"
+    ],
+    "name": "Jeffrey Hyman",
+    "nationality": "American",
+    "stagename": "Joey Ramone",
+    "year_birth": 1951,
+    "year_death": 2001
+  },
+  {
+    "_id": "artist9",
+    "bands": [
+      "Dead Kennedys",
+      "Lard",
+      "The Melvins"
+    ],
+    "instruments": [
+      "guitar",
+      "bass"
+    ],
+    "name": "Eric Boucher",
+    "nationality": "American",
+    "stagename": "Jello Biafra",
+    "year_birth": 1958
+  }
+]
