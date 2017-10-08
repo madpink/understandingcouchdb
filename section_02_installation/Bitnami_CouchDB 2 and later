@@ -1,0 +1,3 @@
+wget https://bitnami.com/redirect/to/147071/bitnami-couchdb-2.0.0-2-linux-x64-installer.run
+chmod +x bitnami-couchdb-2.0.0-2-linux-x64-installer.run
+sudo ./bitnami-couchdb-2.0.0-2-linux-x64-installer.run
