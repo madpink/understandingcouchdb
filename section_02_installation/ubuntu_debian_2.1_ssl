@@ -1,0 +1,135 @@
+##### Install CouchDB via APT-GET, Bitnami, using one of the previous lessons
+### It is not necessary to set the bind address to 0.0.0.0 during the installation
+
+##### Install HAProxy and Certbot
+apt-get update -y && apt-get install software-properties-common -y
+add-apt-repository ppa:certbot/certbot -y 
+apt-get update -y  && apt-get install haproxy certbot curl nano -y
+
+##### Edit HAProxy and add the enabled line
+nano /etc/default/haproxy
+## Add the following line to /etc/default/haproxy
+ENABLED=1
+
+##### Edit HAProxy config file
+nano /etc/haproxy/haproxy.cfg
+## Make it look like below
+## replace the port number in the line "bind *:443" to whatever port you would like or you can leave as 443
+## NOTE: 443 might not work if another service already claimed it like a webserver
+## change "MY_DOMAIN" to your domain name in the ssl file name
+----------------------------------------
+global
+	log /dev/log	local0
+	log /dev/log	local1 notice
+	chroot /var/lib/haproxy
+	stats socket /run/haproxy/admin.sock mode 660 level admin
+	stats timeout 30s
+	maxconn 2048
+	tune.ssl.default-dh-param 2048
+	user haproxy
+	group haproxy
+	daemon
+
+	# Default SSL material locations
+  ca-base /etc/ssl/certs
+  crt-base /etc/ssl/private
+
+	# Default ciphers to use on SSL-enabled listening sockets.
+	# For more information, see ciphers(1SSL). This list is from:
+	#  https://hynek.me/articles/hardening-your-web-servers-ssl-ciphers/
+	ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AESGCM:RSA+AES:RSA+3DES:!aNULL:!MD5:!DSS
+	ssl-default-bind-options no-sslv3
+
+defaults
+	log	global
+	mode	http
+	option forwardfor
+  option http-server-close
+	option	httplog
+	option	dontlognull
+		timeout connect 5000
+		timeout client  50000
+		timeout server  50000
+	errorfile 400 /etc/haproxy/errors/400.http
+	errorfile 403 /etc/haproxy/errors/403.http
+	errorfile 408 /etc/haproxy/errors/408.http
+	errorfile 500 /etc/haproxy/errors/500.http
+	errorfile 502 /etc/haproxy/errors/502.http
+	errorfile 503 /etc/haproxy/errors/503.http
+	errorfile 504 /etc/haproxy/errors/504.http
+
+frontend http-in
+		 bind *:443 ssl crt /etc/haproxy/cert-haproxy.pem
+		 default_backend couchdbs
+		 reqadd X-Forwarded-Proto:\ https
+		 acl secure dst_port eq 443
+		 rsprep ^Set-Cookie:\ (.*) Set-Cookie:\ \1;\ Secure if secure
+		 rspadd Strict-Transport-Security:\ max-age=31536000 if secure
+		 redirect scheme https code 301 if !{ ssl_fc }
+
+backend couchdbs
+		option httpchk GET /_up
+		http-check disable-on-404
+		server couchdb1 127.0.0.1:5984 check inter 5s
+EOT
+------------------------------------------------
+
+##### Create the cert-hook
+## Below, replace "MY_DOMAIN" with the domain name being used
+nano /etc/haproxy/cert-hook
+## add the lines below:
+-----------------------------------
+#!/bin/sh
+DOMAIN="MY_DOMAIN"
+FULL_PEM="/etc/haproxy/cert-haproxy.pem"
+echo "Certbot renewal hook running as user: '$USER'..." >&2
+echo "RENEWED_DOMAINS=$RENEWED_DOMAINS" >&2
+echo "RENEWED_LINEAGE=$RENEWED_LINEAGE" >&2
+
+if grep --quiet "$DOMAIN" <<< "$RENEWED_DOMAINS"; then
+		cat $RENEWED_LINEAGE/fullchain.pem $RENEWED_LINEAGE/privkey.pem > $FULL_PEM
+		echo "PEM updated $FULL_PEM" >&2
+		systemctl restart haproxy
+		echo "Haproxy restarted" >&2
+fi
+-------------
+
+##### Make cert-hook executable:
+chmod +x /etc/haproxy/cert-hook
+
+##### Generate SSL certificates
+## change MY_DOMAIN to the domain name
+certbot certonly --standalone -d MY_DOMAIN --renew-hook "/etc/haproxy/cert-hook"
+cat /etc/letsencrypt/live/MY_DOMAIN/fullchain.pem /etc/letsencrypt/live/MY_DOMAIN/privkey.pem > /etc/haproxy/cert-haproxy.pem
+chmod 600  /etc/haproxy/cert-haproxy.pem
+
+##### Restart HAProxy
+sudo service haproxy restart
+
+##### Create auto renewal script
+sudo nano /etc/systemd/system/certbot.service 
+## add lines below:
+------------------------------------------
+[Unit]
+Description=Lets Encrypt Automated Renewal
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/certbot renew --quiet --agree-tos --renew-hook "/etc/haproxy/cert-hook"
+------------------------------------------
+
+
+sudo nano /etc/systemd/system/certbot.timer
+------------------------------------------
+Description=Daily renewal of Let's Encrypt's certificates
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1day
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+------------------------------------------
+
+systemctl daemon-reload
