@@ -1,0 +1,61 @@
+[{
+  "_id": "pub1001",
+  "type":"entry",
+  "name":"The Old Pink Flamingo"
+},
+{
+  "_id": "pub1002",
+  "type":"entry",
+  "name":"The Continental"
+},
+{
+  "_id": "rat0001",
+  "type":"rating",
+  "value": 4.2,
+  "pub":"pub1001",
+  "reviewer": "Bob S."
+},
+{
+  "_id": "rat0002",
+  "type":"rating",
+  "value": 4.5,
+  "pub":"pub1001",
+  "reviewer": "Brenda C."
+},
+{
+  "_id": "rat0003",
+  "type":"rating",
+  "value": 4.3,
+  "pub":"pub1001",
+  "reviewer": "Tony G."
+},
+{
+  "_id": "rat0004",
+  "type":"rating",
+  "value": 4.9,
+  "pub":"pub1002",
+  "reviewer": "Lucretia"
+},
+{
+  "_id": "rat0005",
+  "type":"rating",
+  "value": 4.8,
+  "pub":"pub1002",
+  "reviewer": "Pink"
+},
+{
+  "_id": "rat0006",
+  "type":"rating",
+  "value": 4.6,
+  "pub":"pub1002",
+  "reviewer": "Raven"
+},
+{
+    "_id": "_design/ratings",
+    "views": {
+        "pub": {
+            "map": "function(doc) {\n    if (doc.type == \"entry\") {\n        emit([doc._id, 0], doc);\n    } else if (doc.type == \"rating\") {\n        emit([doc.pub, 1], doc);\n    }\n}"
+        }
+    },
+    "language": "javascript"
+}]
