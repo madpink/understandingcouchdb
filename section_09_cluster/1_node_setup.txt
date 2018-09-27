@@ -1,27 +1,47 @@
-################# INSTALL AND SETUP COUCHDB ON ALL NODES #################
-sudo apt-get update -y
-sudo apt-get install nano curl apt-transport-https runit -y
-sudo nano /etc/apt/sources.list 
-#####  add the line below to sources  (replace xenial with your distribution)
-deb https://apache.bintray.com/couchdb-deb xenial main
-
-curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
-sudo apt-get update && sudo apt-get install couchdb -y
+################# PREPERATION FOR INSTALLATION #################
+-for all nodes, you will want to use the SAME admin password
+-for all nodes, you will need to assign the SAME "Erlang magic cookie"
+-for each individual node you will need to assign a DIFFERENT "CouchDB Erlang node name"
+---the node name can use an IP4 address, or it can be a FQDN that resolves to this node
+---the node name begins with "couchdb@"
+-----example of a node name with an IP4 address:   couchdb@42.23.5.41
+-----example of a node name with a FQDN:           couchdb@node1.iownthisdomainname.com
+---you can use private network addresses, if they are all on the same network and that is how you would like to communicate
+-----for example, you can use local IP addreses:   couchdb@192.0.0.42 as long as all of the nodes can reach it at that address
 #####  
 
-sudo mkdir /etc/sv/couchdb && sudo mkdir /etc/sv/couchdb/log
-sudo nano /etc/sv/couchdb/log/run2
-#####   add the following 2 lines to run2:
-#!/bin/sh
-exec svlogd -tt /var/log/couchdb
+################# INSTALL AND SETUP COUCHDB ON ALL NODES #################
+sudo apt-get update -y && sudo apt-get install nano curl apt-transport-https -y 
 
-sudo nano /etc/sv/couchdb/run
-##### add the following 4 lines to run:
-#!/bin/sh
-export HOME=/home/couchdb
-exec 2>&1
-exec chpst -u couchdb /opt/couchdb/bin/couchdb
+sudo nano /etc/apt/sources.list 
+#####  add the following line: (change bionic to xenial for Ubuntu 16.04)
+deb https://apache.bintray.com/couchdb-deb bionic main
 
-sudo chmod u+x /etc/sv/couchdb/log/run && sudo chmod u+x /etc/sv/couchdb/run
-sudo ln -s /etc/sv/couchdb/ /etc/service/couchdb
+sudo curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
+sudo apt-get update && sudo apt-get install couchdb -y
+
+####  during installation:
+-select "2. clustered" as the server configuration
+-enter the CouchDB Erlang node name, different for each node  (see top)
+-enter the CouchDB Erlang magic cookie, the same for all nodes (see top)
+-enter 0.0.0.0 as the bind address
+-enter an admin password, the same for all nodes (see top)
+#####
+
+################# SETUP CLUSTER VIA FAUXTON ################# 
+--login to one of the nodes to setup the cluster
+http://42.23.5.41:5984/_utils/#login
+--go to setup, choose cluster mode
+--fill out the admin username and password you want to use
+--put in the number of nodes you will want to setup for this cluster (including this node)
+--enter the IP address or the FQDN for each node you want to add
+--save!
+
+-check the membership via REST API:
+curl -X GET "http://admin:password@42.23.5.41:5984/_membership"
+####
+
+################# OTHER STUFF ################# 
+--to manually add another new node via REST API:
+curl -X PUT "admin:trustno1@127.0.0.1:5984/_nodes/couchdb@42.23.541.0" -d {}
 
