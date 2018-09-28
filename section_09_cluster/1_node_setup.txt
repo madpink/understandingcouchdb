@@ -6,8 +6,6 @@
 ---the node name begins with "couchdb@"
 -----example of a node name with an IP4 address:   couchdb@42.23.5.41
 -----example of a node name with a FQDN:           couchdb@node1.iownthisdomainname.com
----you can use private network addresses, if they are all on the same network and that is how you would like to communicate
------for example, you can use local IP addreses:   couchdb@192.0.0.42 as long as all of the nodes can reach it at that address
 #####  
 
 ################# INSTALL AND SETUP COUCHDB ON ALL NODES #################
