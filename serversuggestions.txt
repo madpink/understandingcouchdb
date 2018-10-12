@@ -1,0 +1,8 @@
+For physical servers:
+HP Microserver:  https://www.amazon.com/HP-MICROSVR-GEN10-X3216-870208-001/dp/B0732T8YN4
+Dell T30: https://www.amazon.com/Newest-Dell-PowerEdge-Server-E3-1225/dp/B0722J7NNX
+Antsle:  https://antsle.com/
+
+FOR VPS:
+https://www.vultr.com/?ref=7281034
+
