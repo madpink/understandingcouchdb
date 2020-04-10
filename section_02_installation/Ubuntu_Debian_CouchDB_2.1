@@ -20,6 +20,7 @@ add the lines:
 export HOME=/home/couchdb
 exec 2>&1
 exec chpst -u couchdb /opt/couchdb/bin/couchdb
+
 sudo chmod u+x /etc/sv/couchdb/log/run && sudo chmod u+x /etc/sv/couchdb/run
 sudo ln -s /etc/sv/couchdb/ /etc/service/couchdb
 
